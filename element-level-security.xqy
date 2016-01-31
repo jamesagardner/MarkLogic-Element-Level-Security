@@ -7,15 +7,10 @@ import module namespace elsi = "http://marklogic.com/ps/element-level-security/i
 
 declare namespace sec = "http://marklogic.com/xdmp/security";
 
-(: Retrieval Functions :)
+(: Read Functions :)
 declare function els:doc($uri as xs:string*, $permissions as element(sec:permission)*) as document-node()*
 {
 	els:redact(fn:doc($uri), $permissions)
-};
-
-declare function els:redact($node as node(), $permissions as element(sec:permission)*) as node()?
-{
-	elsi:redact($node, $permissions, $elsi:default-options)
 };
 
 declare function els:element-values($element-names as xs:QName*, $permissions as element(sec:permission)*)  as xs:anyAtomicType* {
@@ -44,7 +39,17 @@ declare function els:element-values($element-names as xs:QName*, $start as xs:an
 };
 
 (: Update Functions :)
-declare function els:element-add-permission($element as element(), $permission as element(sec:permission))
+declare function els:element-add-permission($element as element(), $permission as element(sec:permission)) as empty-sequence()
 {
 	xdmp:node-replace($element, elsi:element-build-with-permission($element, $permission))
+};
+
+(: In Memory Functions :)
+declare function els:element-build-with-permission($element as element(), $permission as element(sec:permission)) as element() {
+	elsi:element-build-with-permission($element, $permission)
+};
+
+declare function els:redact($node as node(), $permissions as element(sec:permission)*) as node()?
+{
+	elsi:redact($node, $permissions, $elsi:default-options)
 };
