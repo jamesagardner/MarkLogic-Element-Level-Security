@@ -26,12 +26,7 @@ declare function elsi:element-build-with-permission($element as element(), $perm
 	}
 };
 
-declare function elsi:redact($node as node(), $permissions as element(sec:permission)*) as node()?
-{
-	elsi:redact($node, $permissions, $default-options)
-};
-
-declare private function elsi:redact($node as node(), $permissions as element(sec:permission)*, $options as element(els:options)) as node()? {
+declare function elsi:redact($node as node(), $permissions as element(sec:permission)*, $options as element(els:options)) as node()? {
 	typeswitch ($node)
 	case element() return
 		if(elsi:has-permission($node, $permissions)) then
@@ -49,7 +44,7 @@ declare private function elsi:redact($node as node(), $permissions as element(se
 };
 
 
-declare private function elsi:has-permission($element as element(), $permissions as element(sec:permission)*) as xs:boolean
+declare function elsi:has-permission($element as element(), $permissions as element(sec:permission)*) as xs:boolean
 {
 	if (elsi:is-protected-element($element)) then
 		let $predicates := elsi:predicate-from-permission($permissions)
@@ -59,7 +54,7 @@ declare private function elsi:has-permission($element as element(), $permissions
 		fn:true()
 };
 
-declare private function elsi:is-protected-element($element as element()) as xs:boolean
+declare function elsi:is-protected-element($element as element()) as xs:boolean
 {
 	let $subject := elsi:subject-from-element($element)
 	return

@@ -10,7 +10,12 @@ declare namespace sec = "http://marklogic.com/xdmp/security";
 (: Retrieval Functions :)
 declare function els:doc($uri as xs:string*, $permissions as element(sec:permission)*) as document-node()*
 {
-	elsi:redact(fn:doc($uri), $permissions)
+	els:redact(fn:doc($uri), $permissions)
+};
+
+declare function els:redact($node as node(), $permissions as element(sec:permission)*) as node()?
+{
+	elsi:redact($node, $permissions, $elsi:default-options)
 };
 
 declare function els:element-values($element-names as xs:QName*, $permissions as element(sec:permission)*)  as xs:anyAtomicType* {
