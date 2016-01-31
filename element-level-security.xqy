@@ -6,6 +6,11 @@ import module namespace sem = "http://marklogic.com/semantics" at "/MarkLogic/se
 
 declare namespace sec = "http://marklogic.com/xdmp/security";
 
+declare variable $default-options := 
+	<els:options>
+		<els:remove-permissions>true</els:remove-permissions>
+	</els:options>;
+
 declare function els:element-add-permission($element as element(), $permission as element(sec:permission))
 {
 	xdmp:node-replace($element, els:element-build-with-permission($element, $permission))
@@ -25,15 +30,24 @@ declare function els:element-build-with-permission($element as element(), $permi
 
 declare function els:redact($node as node(), $permissions as element(sec:permission)*) as node()?
 {
+	els:redact($node, $permissions, $default-options)
+};
+
+declare private function els:redact($node as node(), $permissions as element(sec:permission)*, $options as element(els:options)) as node()? {
 	typeswitch ($node)
-		case element() return
-			if(els:has-permission($node, $permissions)) then
-				element {fn:node-name($node)} {els:redact($node/(@*|node()), $permissions)}
+	case element() return
+		if(els:has-permission($node, $permissions)) then
+			if (els:is-protected-element($node) and $options/els:remove-permissions/xs:boolean(.)) then
+				element {fn:node-name($node)} {
+					els:redact($node/(@*|node()) except $node/sem:triples[sem:subject = els:subject-from-element($node)], $permissions, $options)
+				}
 			else
-				()
-		case document-node() return
-			document {els:redact($node/node(), $permissions)}
-		default return $node
+				element {fn:node-name($node)} {els:redact($node/(@*|node()), $permissions, $options)}
+		else
+			()
+	case document-node() return
+		document {els:redact($node/node(), $permissions, $options)}
+	default return $node
 };
 
 
