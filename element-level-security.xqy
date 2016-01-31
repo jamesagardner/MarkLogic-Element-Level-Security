@@ -21,9 +21,11 @@ declare function els:element-build-with-permission($element as element(), $permi
 	element {fn:node-name($element)} {
 		$element/node(),
 	    <sem:triples>
-      		<sem:subject>{els:subject-from-element($element)}</sem:subject>
-      		<sem:predicate>{els:predicate-from-permission($permission)}</sem:predicate>
-      		<sem:object>{fn:data($element)}</sem:object>
+	    	<sem:triple>
+      			<sem:subject>{els:subject-from-element($element)}</sem:subject>
+      			<sem:predicate>{els:predicate-from-permission($permission)}</sem:predicate>
+      			<sem:object>{fn:data($element)}</sem:object>
+      		</sem:triple>
 		</sem:triples>
 	}
 };
@@ -39,7 +41,7 @@ declare private function els:redact($node as node(), $permissions as element(sec
 		if(els:has-permission($node, $permissions)) then
 			if (els:is-protected-element($node) and $options/els:remove-permissions/xs:boolean(.)) then
 				element {fn:node-name($node)} {
-					els:redact($node/(@*|node()) except $node/sem:triples[sem:subject = els:subject-from-element($node)], $permissions, $options)
+					els:redact($node/(@*|node()) except $node/sem:triples[sem:triple/sem:subject = els:subject-from-element($node)], $permissions, $options)
 				}
 			else
 				element {fn:node-name($node)} {els:redact($node/(@*|node()), $permissions, $options)}
@@ -56,7 +58,7 @@ declare private function els:has-permission($element as element(), $permissions 
 	if (els:is-protected-element($element)) then
 		let $predicates := els:predicate-from-permission($permissions)
 		let $subject := els:subject-from-element($element)
-		return fn:exists($element/sem:triples[sem:subject = $subject and sem:predicate = $predicates])
+		return fn:exists($element/sem:triples/sem:triple[sem:subject = $subject and sem:predicate = $predicates])
 	else
 		fn:true()
 };
@@ -65,17 +67,21 @@ declare private function els:is-protected-element($element as element()) as xs:b
 {
 	let $subject := els:subject-from-element($element)
 	return
-		fn:exists($element/sem:triples[sem:subject = $subject and 
+		fn:exists($element/sem:triples/sem:triple[sem:subject = $subject and 
 			fn:starts-with(sem:predicate, "http://marklogic.com/ps/element-level-security/permission/role-id")])
 };
 
-declare private function els:subject-from-element($element as element()) as xs:string
+declare function els:subject-from-element($element as element()) as sem:iri
 {
-	"http://marklogic.com/ps/element-level-security/qname/{" || fn:namespace-uri($element) || "}" || fn:local-name($element)
+	els:subject-from-qname(fn:node-name($element))
 };
 
-
-declare private function els:predicate-from-permission($permission as element(sec:permission)) as xs:string
+declare function els:subject-from-qname($qname as xs:QName) as sem:iri
 {
-	"http://marklogic.com/ps/element-level-security/permission/role-id/" || fn:data($permission/sec:role-id)
+	sem:iri("http://marklogic.com/ps/element-level-security/qname/{" || fn:namespace-uri-from-QName($qname) || "}" || fn:local-name-from-QName($qname))
+};
+
+declare function els:predicate-from-permission($permission as element(sec:permission)) as sem:iri
+{
+	sem:iri("http://marklogic.com/ps/element-level-security/permission/role-id/" || fn:data($permission/sec:role-id))
 };
