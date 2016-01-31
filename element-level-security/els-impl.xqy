@@ -5,16 +5,12 @@ module namespace elsi = "http://marklogic.com/ps/element-level-security/impl";
 import module namespace sem = "http://marklogic.com/semantics" at "/MarkLogic/semantics.xqy";
 
 declare namespace sec = "http://marklogic.com/xdmp/security";
+declare namespace els = "http://marklogic.com/ps/element-level-security";
 
 declare variable $default-options := 
-	<elsi:options>
-		<elsi:remove-permissions>true</elsi:remove-permissions>
-	</elsi:options>;
-
-declare function elsi:element-add-permission($element as element(), $permission as element(sec:permission))
-{
-	xdmp:node-replace($element, elsi:element-build-with-permission($element, $permission))
-};
+	<els:options>
+		<els:remove-permissions>true</els:remove-permissions>
+	</els:options>;
 
 declare function elsi:element-build-with-permission($element as element(), $permission as element(sec:permission)) as element()
 {
@@ -35,11 +31,11 @@ declare function elsi:redact($node as node(), $permissions as element(sec:permis
 	elsi:redact($node, $permissions, $default-options)
 };
 
-declare private function elsi:redact($node as node(), $permissions as element(sec:permission)*, $options as element(elsi:options)) as node()? {
+declare private function elsi:redact($node as node(), $permissions as element(sec:permission)*, $options as element(els:options)) as node()? {
 	typeswitch ($node)
 	case element() return
 		if(elsi:has-permission($node, $permissions)) then
-			if (elsi:is-protected-element($node) and $options/elsi:remove-permissions/xs:boolean(.)) then
+			if (elsi:is-protected-element($node) and $options/els:remove-permissions/xs:boolean(.)) then
 				element {fn:node-name($node)} {
 					elsi:redact($node/(@*|node()) except $node/sem:triples[sem:triple/sem:subject = elsi:subject-from-element($node)], $permissions, $options)
 				}

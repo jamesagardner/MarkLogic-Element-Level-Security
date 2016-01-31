@@ -7,6 +7,7 @@ import module namespace elsi = "http://marklogic.com/ps/element-level-security/i
 
 declare namespace sec = "http://marklogic.com/xdmp/security";
 
+(: Retrieval Functions :)
 declare function els:doc($uri as xs:string*, $permissions as element(sec:permission)*) as document-node()*
 {
 	elsi:redact(fn:doc($uri), $permissions)
@@ -35,4 +36,10 @@ declare function els:element-values($element-names as xs:QName*, $start as xs:an
 declare function els:element-values($element-names as xs:QName*, $start as xs:anyAtomicType?, $options as xs:string*, $query as cts:query?, $quality-weight as xs:double?, $forest-ids as xs:unsignedLong*, $permissions as element(sec:permission)*) as xs:anyAtomicType* {
 	let $triples := cts:triples(elsi:subject-from-qname($element-names), elsi:predicate-from-permission($permissions), $start, $start ! ">=", $options, $query, $forest-ids)
 	return document {$triples}/sem:triple/sem:object/node()
+};
+
+(: Update Functions :)
+declare function els:element-add-permission($element as element(), $permission as element(sec:permission))
+{
+	xdmp:node-replace($element, elsi:element-build-with-permission($element, $permission))
 };
