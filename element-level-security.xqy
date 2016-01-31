@@ -28,9 +28,11 @@ declare function els:redact($node as node(), $permissions as element(sec:permiss
 	typeswitch ($node)
 		case element() return
 			if(els:has-permission($node, $permissions)) then
-				element {fn:node-name($node)} { els:redact($node/(@*|node()), $permissions)}
+				element {fn:node-name($node)} {els:redact($node/(@*|node()), $permissions)}
 			else
 				()
+		case document-node() return
+			document {els:redact($node/node(), $permissions)}
 		default return $node
 };
 
